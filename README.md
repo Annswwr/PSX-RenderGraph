@@ -1,4 +1,14 @@
-# URP-PSX
+# PSX-RenderGraph (Unity 6)
+
+This project is a fork of [kodrin/URP-PSX](https://github.com/kodrin/URP-PSX) updated for Unity 6.
+
+**Changes from original:**
+- Updated to Unity 6000.4.0f1
+- Reimplemented Pixelation as a ShaderGraph (`Shaders/Pixelation.shadergraph`)
+- Fog and Dithering are NOT implemented just yet
+
+# Original Description:
+## URP-PSX
 
 Playstation 1 era retro graphics plugin optimized for Unity's Universal Rendering Pipeline with Shadergraph. The aim of this plugin was to use Unity's new pipeline to create NPR (non-photorealistic) PSX-style retro graphics with the shadergraph as the basis for materials and URP's render features as the basis for post processing effects.
 
