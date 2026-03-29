@@ -2,6 +2,7 @@
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
+/*
 namespace PSX
 {
     public class DitheringRenderFeature : ScriptableRendererFeature
@@ -103,3 +104,4 @@ namespace PSX
         }
     }
 }
+*/

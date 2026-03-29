@@ -1,20 +1,16 @@
-﻿using UnityEngine;
+﻿using System;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
 
 namespace PSX
 {
-    public class Pixelation : VolumeComponent, IPostProcessComponent
+    [Serializable]
+    [VolumeComponentMenu("PSX/Pixelation")]
+    public class PixelationVolumeComponent : VolumeComponent, IPostProcessComponent
     {
-        //PIXELATION
-        public FloatParameter widthPixelation = new FloatParameter(512);
-        public FloatParameter heightPixelation = new FloatParameter(512);
-        
-        //COLOR PRECISION 
-        public FloatParameter colorPrecision = new FloatParameter(32.0f);
-        
-        //INTERFACE REQUIREMENT 
-        public bool IsActive() => true;
-        public bool IsTileCompatible() => false;
+        public IntParameter WidthPixelation = new IntParameter(640, true);
+        public IntParameter HeightPixelation = new IntParameter(360, true);
+        public FloatParameter ColorPrecision = new FloatParameter(32.0f, true);
+
+        public bool IsActive() => AnyPropertiesIsOverridden();
     }
 }

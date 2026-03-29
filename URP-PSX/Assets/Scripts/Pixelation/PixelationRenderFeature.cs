@@ -1,104 +1,150 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.RenderGraphModule;
+using UnityEngine.Rendering.RenderGraphModule.Util;
 using UnityEngine.Rendering.Universal;
 
 namespace PSX
 {
     public class PixelationRenderFeature : ScriptableRendererFeature
     {
-        PixelationPass pixelationPass;
+        //[SerializeField] private Shader shader;
+        [SerializeField] private Shader shader;
+        [SerializeField] private RenderPassEvent injectionPoint = RenderPassEvent.BeforeRenderingPostProcessing;
 
+        private Material _material;
+        private PixelationRenderPass _pixelationRenderPass;
+    
         public override void Create()
         {
-            pixelationPass = new PixelationPass(RenderPassEvent.BeforeRenderingPostProcessing);
+            // If no shader is found, attempt to fetch it, else abort
+            if (!shader)
+            {
+                shader = Shader.Find("Shader Graphs/Pixelation");
+                if (!shader)
+                {
+                    Debug.LogError($"{nameof(PixelationRenderFeature)} skipped: Requires a shader to function.");
+                    return;
+                }
+            }
+        
+            // Creates the material from shader
+            _material = new Material(shader);
+        
+            // Creates the render pass
+            _pixelationRenderPass = new PixelationRenderPass(_material)
+            {
+                renderPassEvent = injectionPoint
+            };
         }
 
-        //ScripstableRendererFeature is an abstract class, you need this method
+
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
-            pixelationPass.Setup(renderer.cameraColorTarget);
-            renderer.EnqueuePass(pixelationPass);
-        }
-    }
-    
-    
-    public class PixelationPass : ScriptableRenderPass
-    {
-        private static readonly string shaderPath = "PostEffect/Pixelation";
-        static readonly string k_RenderTag = "Render Pixelation Effects";
-        static readonly int MainTexId = Shader.PropertyToID("_MainTex");
-        static readonly int TempTargetId = Shader.PropertyToID("_TempTargetPixelation");
         
-        //PROPERTIES
-        static readonly int WidthPixelation = Shader.PropertyToID("_WidthPixelation");
-        static readonly int HeightPixelation = Shader.PropertyToID("_HeightPixelation");
-        static readonly int ColorPrecison = Shader.PropertyToID("_ColorPrecision");
-
+#if UNITY_EDITOR
+            // If post-processing is turned off in the scene view, don't pixelize
+            if (renderingData.cameraData.isSceneViewCamera)
+            {
+                var sceneView = UnityEditor.SceneView.currentDrawingSceneView;
+                if (sceneView != null && !sceneView.sceneViewState.showImageEffects)
+                {
+                    return;
+                }
+            }
+#endif
         
-        Pixelation pixelation;
-        Material pixelationMaterial;
-        RenderTargetIdentifier currentTarget;
-    
-        public PixelationPass(RenderPassEvent evt)
-        {
-            renderPassEvent = evt;
-            var shader = Shader.Find(shaderPath);
-            if (shader == null)
+            // Gets around an error where these are null switching scenes (this may be a bad solution)
+            if (_pixelationRenderPass == null || _material == null)
             {
-                Debug.LogError("Shader not found.");
-                return;
+                Create();
             }
-            this.pixelationMaterial = CoreUtils.CreateEngineMaterial(shader);
-        }
-    
-        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
-        {
-            if (this.pixelationMaterial == null)
-            {
-                Debug.LogError("Material not created.");
-                return;
-            }
-    
-            if (!renderingData.cameraData.postProcessEnabled) return;
-    
-            var stack = VolumeManager.instance.stack;
-            
-            this.pixelation = stack.GetComponent<Pixelation>();
-            if (this.pixelation == null) { return; }
-            if (!this.pixelation.IsActive()) { return; }
-    
-            var cmd = CommandBufferPool.Get(k_RenderTag);
-            Render(cmd, ref renderingData);
-            context.ExecuteCommandBuffer(cmd);
-            CommandBufferPool.Release(cmd);
-        }
-    
-        public void Setup(in RenderTargetIdentifier currentTarget)
-        {
-            this.currentTarget = currentTarget;
-        }
-    
-        void Render(CommandBuffer cmd, ref RenderingData renderingData)
-        {
-            ref var cameraData = ref renderingData.cameraData;
-            var source = currentTarget;
-            int destination = TempTargetId;
-    
-            //getting camera width and height 
-            var w = cameraData.camera.scaledPixelWidth;
-            var h = cameraData.camera.scaledPixelHeight;
-            
-            //setting parameters here 
-            cameraData.camera.depthTextureMode = cameraData.camera.depthTextureMode | DepthTextureMode.Depth;
-            this.pixelationMaterial.SetFloat(WidthPixelation, this.pixelation.widthPixelation.value);
-            this.pixelationMaterial.SetFloat(HeightPixelation, this.pixelation.heightPixelation.value);
-            this.pixelationMaterial.SetFloat(ColorPrecison, this.pixelation.colorPrecision.value);
 
-            int shaderPass = 0;
-            cmd.SetGlobalTexture(MainTexId, source);
-            cmd.GetTemporaryRT(destination, w, h, 0, FilterMode.Point, RenderTextureFormat.Default);
-            cmd.Blit(source, destination);
-            cmd.Blit(destination, source, this.pixelationMaterial, shaderPass);
+            // Enqueue the pass if both of these exist resources exist
+            if (_pixelationRenderPass != null && _material != null)
+            {
+                renderer.EnqueuePass(_pixelationRenderPass);
+            }
+        }
+    
+        private class PixelationRenderPass : ScriptableRenderPass
+        {
+            private static readonly int s_PixelationWidth = Shader.PropertyToID("_PixelationWidth");
+            private static readonly int s_PixelationHeight = Shader.PropertyToID("_PixelationHeight");
+            private static readonly int s_ColorPrecision = Shader.PropertyToID("_ColorPrecision");
+
+            private const string k_psxPassName = "Pixelation (PSX)";
+
+            private readonly Material _material;
+        
+            private TextureDesc _pixelationTextureDesc;
+
+            public PixelationRenderPass(Material material)
+            {
+                this._material = material;
+            }
+
+            private void RefreshMaterialValues(PixelationVolumeComponent pixelationVolumeComponent)
+            {
+                if (_material == null) return;
+            
+                // Determine values
+                var pixelationWidth = pixelationVolumeComponent.WidthPixelation.overrideState 
+                    ? pixelationVolumeComponent.WidthPixelation.value 
+                    : Screen.width;
+                var pixelationHeight = pixelationVolumeComponent.HeightPixelation.overrideState 
+                    ? pixelationVolumeComponent.HeightPixelation.value 
+                    : Screen.height;
+                var colorPrecision = pixelationVolumeComponent.ColorPrecision.overrideState 
+                    ? pixelationVolumeComponent.ColorPrecision.value 
+                    : int.MaxValue;
+            
+                // Apply to material
+                _material.SetFloat(s_PixelationWidth, pixelationWidth);
+                _material.SetFloat(s_PixelationHeight, pixelationHeight);
+                _material.SetFloat(s_ColorPrecision, colorPrecision);
+            }
+        
+            public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+            {
+                // Fetch rendering data
+                var resourceData = frameData.Get<UniversalResourceData>();      
+                if (resourceData.isActiveTargetBackBuffer)
+                {
+                    Debug.LogError($"Skipping {nameof(PixelationRenderPass)}: An immediate ColorTexture is required. The BackBuffer cannot be used as a texture input.");
+                    return;
+                }
+            
+                // Check whether volume component exists and default settings are enabled
+                var stack = VolumeManager.instance.stack;
+                var pixelationVolume = stack.GetComponent<PixelationVolumeComponent>();
+                if (!pixelationVolume.IsActive())
+                    return;
+            
+                // Refresh the material values
+                RefreshMaterialValues(pixelationVolume);
+            
+                // Get the current color texture
+                var source = resourceData.activeColorTexture;
+            
+                // Fetch descriptor / parameters for the new RenderTexture
+                _pixelationTextureDesc = renderGraph.GetTextureDesc(source);
+                _pixelationTextureDesc.name = $"RT_{k_psxPassName}";
+                _pixelationTextureDesc.filterMode = FilterMode.Point;
+                _pixelationTextureDesc.clearBuffer = false;    // We want to modify not start from a blank slate.
+            
+                // Create the new render texture
+                var destination = renderGraph.CreateTexture(_pixelationTextureDesc);
+            
+                // Blit the texture using the shader material
+                var parameters = new RenderGraphUtils.BlitMaterialParameters(source, destination, _material, 0);
+                renderGraph.AddBlitPass(parameters, passName: k_psxPassName);
+            
+                // Swap the camera color buffer with the new modified texture
+                resourceData.cameraColor = destination;
+            }
         }
     }
 }
+
+

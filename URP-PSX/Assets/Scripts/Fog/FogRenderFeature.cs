@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-
+/*
 namespace PSX
 {
     public class FogRenderFeature : ScriptableRendererFeature
@@ -20,8 +20,8 @@ namespace PSX
             renderer.EnqueuePass(fogPass);
         }
     }
-    
-    
+
+
     public class FogPass : ScriptableRenderPass
     {
         private static readonly string shaderPath = "PostEffect/Fog";
@@ -37,11 +37,11 @@ namespace PSX
         static readonly int FogThinning = Shader.PropertyToID("_FogThinning");
         static readonly int NoiseScale = Shader.PropertyToID("_NoiseScale");
         static readonly int NoiseStrength = Shader.PropertyToID("_NoiseStrength");
-        
+
         Fog fog;
         Material fogMaterial;
         RenderTargetIdentifier currentTarget;
-    
+
         public FogPass(RenderPassEvent evt)
         {
             renderPassEvent = evt;
@@ -53,7 +53,7 @@ namespace PSX
             }
             this.fogMaterial = CoreUtils.CreateEngineMaterial(shader);
         }
-    
+
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             if (this.fogMaterial == null)
@@ -61,37 +61,37 @@ namespace PSX
                 Debug.LogError("Material not created.");
                 return;
             }
-    
+
             if (!renderingData.cameraData.postProcessEnabled) return;
-    
+
             var stack = VolumeManager.instance.stack;
-            
+
             this.fog = stack.GetComponent<Fog>();
             if (this.fog == null) { return; }
             if (!this.fog.IsActive()) { return; }
-    
+
             var cmd = CommandBufferPool.Get(k_RenderTag);
             Render(cmd, ref renderingData);
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
-    
+
         public void Setup(in RenderTargetIdentifier currentTarget)
         {
             this.currentTarget = currentTarget;
         }
-    
+
         void Render(CommandBuffer cmd, ref RenderingData renderingData)
         {
             ref var cameraData = ref renderingData.cameraData;
             var source = currentTarget;
             int destination = TempTargetId;
-    
-            //getting camera width and height 
+
+            //getting camera width and height
             var w = cameraData.camera.scaledPixelWidth;
             var h = cameraData.camera.scaledPixelHeight;
-            
-            //setting parameters here 
+
+            //setting parameters here
             cameraData.camera.depthTextureMode = cameraData.camera.depthTextureMode | DepthTextureMode.Depth;
             this.fogMaterial.SetFloat(FogDensity, this.fog.fogDensity.value);
             this.fogMaterial.SetFloat(FogDistance, this.fog.fogDistance.value);
@@ -102,7 +102,7 @@ namespace PSX
             this.fogMaterial.SetFloat(FogThinning, this.fog.fogThinning.value);
             this.fogMaterial.SetFloat(NoiseScale, this.fog.noiseScale.value);
             this.fogMaterial.SetFloat(NoiseStrength, this.fog.noiseStrength.value);
-    
+
             int shaderPass = 0;
             cmd.SetGlobalTexture(MainTexId, source);
             cmd.GetTemporaryRT(destination, w, h, 0, FilterMode.Point, RenderTextureFormat.Default);
@@ -111,3 +111,4 @@ namespace PSX
         }
     }
 }
+*/
