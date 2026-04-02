@@ -84,19 +84,19 @@ namespace PSX
                 this._material = material;
             }
 
-            private void RefreshMaterialValues(PixelationVolumeComponent pixelationVolumeComponent)
+            private void RefreshMaterialValues(Pixelation pixelation)
             {
                 if (_material == null) return;
             
                 // Determine values
-                var pixelationWidth = pixelationVolumeComponent.WidthPixelation.overrideState 
-                    ? pixelationVolumeComponent.WidthPixelation.value 
+                var pixelationWidth = pixelation.widthPixelation.overrideState 
+                    ? pixelation.widthPixelation.value 
                     : Screen.width;
-                var pixelationHeight = pixelationVolumeComponent.HeightPixelation.overrideState 
-                    ? pixelationVolumeComponent.HeightPixelation.value 
+                var pixelationHeight = pixelation.heightPixelation.overrideState 
+                    ? pixelation.heightPixelation.value 
                     : Screen.height;
-                var colorPrecision = pixelationVolumeComponent.ColorPrecision.overrideState 
-                    ? pixelationVolumeComponent.ColorPrecision.value 
+                var colorPrecision = pixelation.colorPrecision.overrideState 
+                    ? pixelation.colorPrecision.value 
                     : int.MaxValue;
             
                 // Apply to material
@@ -117,7 +117,7 @@ namespace PSX
             
                 // Check whether volume component exists and default settings are enabled
                 var stack = VolumeManager.instance.stack;
-                var pixelationVolume = stack.GetComponent<PixelationVolumeComponent>();
+                var pixelationVolume = stack.GetComponent<Pixelation>();
                 if (!pixelationVolume.IsActive())
                     return;
             

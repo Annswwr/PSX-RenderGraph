@@ -13,15 +13,15 @@ MonoBehaviour:
   m_Name: Pixelation
   m_EditorClassIdentifier: 
   active: 1
-  WidthPixelation:
+  widthPixelation:
     m_OverrideState: 1
-    m_Value: 640
-  HeightPixelation:
+    m_Value: 512
+  heightPixelation:
     m_OverrideState: 1
-    m_Value: 360
-  ColorPrecision:
+    m_Value: 256
+  colorPrecision:
     m_OverrideState: 1
-    m_Value: 32
+    m_Value: 16
 --- !u!114 &-758010384845797820
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -40,7 +40,7 @@ MonoBehaviour:
     m_Value: 2
   ditherThreshold:
     m_OverrideState: 1
-    m_Value: 5.22
+    m_Value: 10
   ditherStrength:
     m_OverrideState: 0
     m_Value: 1
@@ -78,7 +78,7 @@ MonoBehaviour:
   active: 1
   fogDensity:
     m_OverrideState: 1
-    m_Value: 10
+    m_Value: 9.48
   fogDistance:
     m_OverrideState: 1
     m_Value: 2.9

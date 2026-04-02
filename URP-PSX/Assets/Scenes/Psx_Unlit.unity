@@ -742,6 +742,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1289996572}
   - component: {fileID: 1289996571}
+  - component: {fileID: 1289996576}
   - component: {fileID: 1289996575}
   - component: {fileID: 1289996573}
   m_Layer: 0
@@ -824,6 +825,23 @@ MonoBehaviour:
   ditherThreshold: 10
   ditherStrength: 1
   ditherScale: 2
+--- !u!114 &1289996576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1289996570}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd87b7c2a6d986a42ad590d8d5da1fa3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PSX.PixelationController
+  volumeProfile: {fileID: 11400000, guid: 7bbe35cdf5d69e14abbb03eccedaa5bd, type: 2}
+  isEnabled: 1
+  widthPixelation: 512
+  heightPixelation: 256
+  colorPrecision: 16
 --- !u!1001 &1364880466
 PrefabInstance:
   m_ObjectHideFlags: 0
